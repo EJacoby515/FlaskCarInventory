@@ -7,9 +7,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from flask_login import LoginManager
 from flask_marshmallow import Marshmallow 
+from marshmallow  import  fields
 import secrets
 
-# set variables for class instantiation
 login_manager = LoginManager()
 ma = Marshmallow()
 db = SQLAlchemy()
@@ -27,6 +27,8 @@ class User(db.Model, UserMixin):
     g_auth_verify = db.Column(db.Boolean, default = False)
     token = db.Column(db.String, default = '', unique = True )
     date_created = db.Column(db.DateTime, nullable = False, default = datetime.utcnow)
+    inventory_items = db.relationship('Inventory', backref='user', lazy=True)
+
 
     def __init__(self, email, first_name='', last_name='', password='', token='', g_auth_verify=False):
         self.id = self.set_id()
@@ -49,33 +51,33 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return f'User {self.email} has been added to the database'
+    
 
-class Contact(db.Model):
-    id = db.Column(db.String, primary_key = True)
-    name = db.Column(db.String(150), nullable = False)
-    email = db.Column(db.String(200))
-    phone_number = db.Column(db.String(20))
-    address = db.Column(db.String(200))
-    user_token = db.Column(db.String, db.ForeignKey('user.token'), nullable = False)
+class Inventory(db.Model):
+    id = db.Column(db.String, primary_key=True)
+    make = db.Column(db.String(100), nullable=False)
+    model = db.Column(db.String(100), nullable=False)
+    year = db.Column(db.String(5), nullable=False)
+    color = db.Column(db.String(100), nullable=False)
+    user_token = db.Column(db.String, db.ForeignKey('user.token'), nullable=False)
 
-    def __init__(self,name,email,phone_number,address,user_token, id = ''):
+    def __init__(self, make, model, year, color, user_token, id=''):
         self.id = self.set_id()
-        self.name = name
-        self.email = email
-        self.phone_number = phone_number
-        self.address = address
+        self.make = make
+        self.model = model
+        self.year = year
+        self.color = color
         self.user_token = user_token
 
-
     def __repr__(self):
-        return f'The following contact has been added to the phonebook: {self.name}'
+        return f'The following car has been added to your Inventory: {self.model}'
 
     def set_id(self):
-        return (secrets.token_urlsafe())
+        return secrets.token_urlsafe()
+    
+class InventorySchema(ma.Schema):
+     class Meta:
+        fields = ['id', 'make', 'model', 'year', 'color', 'user_token']
 
-class ContactSchema(ma.Schema):
-    class Meta:
-        fields = ['id', 'name','email','phone_number', 'address']
-
-contact_schema = ContactSchema()
-contacts_schema = ContactSchema(many=True)
+inventory_schema = InventorySchema()
+inventories_schema = InventorySchema(many=True)

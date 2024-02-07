@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<script>
+function confirmDelete() {
+    return  confirm('Are you sure you want to DELETE this car?')
+}
+</script>
+
+    <section class="bg-dark text-light text-center shadow mb-20"></section>
+    <br><br><br>
+    <section class="text-center">
+        <div class="container p-10">
+            <div class="row"><br>
+                <table class="table table-dark">
+                    <thead>
+                        <tr>
+                            <th>Make</th>
+                            <th>Model</th>
+                            <th>Year</th>
+                            <th>Color</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for car in current_user.inventory_items %}
+                            <tr>
+                                <td>{{ car.make }}</td>
+                                <td>{{ car.model }}</td>
+                                <td>{{ car.year }}</td>
+                                <td>{{ car.color }}</td>
+                                <td>
+                                    <!-- update and delete buttons -->
+                                    <a href="{{ url_for('site.update_inventory', id=car.id) }}" class="btn btn-warning">Update</a>
+
+
+                                    <a href="{{ url_for('site.delete_inventory', id=car.id) }}" class="btn btn-danger" onClick="return confirmDelete()">Delete</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <h3 class="p-5">Add a new car to your inventory:</h3>
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    <div class="form-group">
+                        <fieldset id="make-field">
+                            {{ form.make.label }}
+                            {{ form.make(class='form-control', placeholder='Place make here') }}
+                        </fieldset>
+                    
+                        <fieldset id="model-field">
+                            {{ form.model.label }}
+                            {{ form.model(class='form-control', placeholder='Place model here') }}
+                        </fieldset>
+
+                        <fieldset id="year">
+                            {{ form.year.label }}
+                            {{ form.year(class='form-control', placeholder='Place year here') }}
+                        </fieldset>
+
+                        <fieldset id="color">
+                            {{ form.color.label }}
+                            {{ form.color(class='form-control', placeholder='Place color here') }}
+                        </fieldset>
+
+                        {{ form.submit_button(class='btn btn-primary btn-block mt-2')}}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+{% endblock %}

@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, render_template
-from helpers import token_required
-from models import db, User, Contact, contact_schema, contacts_schema
+from app.helpers import token_required
+from app.models import db, User, Inventory, inventory_schema, inventories_schema
+from app.forms import UserInventoryForm, UserLoginForm
 
 api = Blueprint('api',__name__, url_prefix='/api')
 
@@ -15,66 +16,61 @@ def getdata():
 #     print(response)
 #     return render_template('index.html', data = data)
 
-@api.route('/contacts', methods = ['POST'])
+@api.route('/inventory', methods=['POST'])
 @token_required
-def create_contact(current_user_token):
-    name = request.json['name']
-    email = request.json['email']
-    phone_number = request.json['phone_number']
-    address = request.json['address']
+def create_inventory(current_user_token):
+    make = request.json['make']
+    model = request.json['model']
+    year = request.json['year']
+    color = request.json['color']
     user_token = current_user_token.token
 
-    print(f'BIG TESTER: {current_user_token.token}')
+    inventory_item = Inventory(make, model, year, color, user_token=user_token)
 
-    contact = Contact(name, email, phone_number, address, user_token = user_token )
-
-    db.session.add(contact)
+    db.session.add(inventory_item)
     db.session.commit()
 
-    response = contact_schema.dump(contact)
+    response = inventory_schema.dump(inventory_item)
     return jsonify(response)
 
-@api.route('/contacts', methods = ['GET'])
+@api.route('/inventory', methods=['GET'])
 @token_required
-def get_contact(current_user_token):
+def get_inventory(current_user_token):
     a_user = current_user_token.token
-    contacts = Contact.query.filter_by(user_token = a_user).all()
-    response = contacts_schema.dump(contacts)
+    inventory_items = Inventory.query.filter_by(user_token=a_user).all()
+    response = inventories_schema.dump(inventory_items)
     return jsonify(response)
 
-@api.route('/contacts/<id>', methods = ['GET'])
+@api.route('/inventory/<id>', methods=['GET'])
 @token_required
-def get_contact_two(current_user_token, id):
+def get_inventory_item(current_user_token, id):
     fan = current_user_token.token
     if fan == current_user_token.token:
-        contact = Contact.query.get(id)
-        response = contact_schema.dump(contact)
+        inventory_item = Inventory.query.get(id)
+        response = inventory_schema.dump(inventory_item)
         return jsonify(response)
     else:
-        return jsonify({"message": "Valid Token Required"}),401
+        return jsonify({"message": "Valid Token Required"}), 401
 
-# UPDATE endpoint
-@api.route('/contacts/<id>', methods = ['POST','PUT'])
+@api.route('/inventory/<id>', methods=['PUT'])
 @token_required
-def update_contact(current_user_token,id):
-    contact = Contact.query.get(id) 
-    contact.name = request.json['name']
-    contact.email = request.json['email']
-    contact.phone_number = request.json['phone_number']
-    contact.address = request.json['address']
-    contact.user_token = current_user_token.token
+def update_inventory(current_user_token, id):
+    inventory_item = Inventory.query.get(id)
+    inventory_item.make = request.json['make']
+    inventory_item.model = request.json['model']
+    inventory_item.year = request.json['year']
+    inventory_item.color = request.json['color']
+    inventory_item.user_token = current_user_token.token
 
     db.session.commit()
-    response = contact_schema.dump(contact)
+    response = inventory_schema.dump(inventory_item)
     return jsonify(response)
 
-
-# DELETE car ENDPOINT
-@api.route('/contacts/<id>', methods = ['DELETE'])
+@api.route('/inventory/<id>', methods=['DELETE'])
 @token_required
-def delete_contact(current_user_token, id):
-    contact = Contact.query.get(id)
-    db.session.delete(contact)
+def delete_inventory(current_user_token, id):
+    inventory_item = Inventory.query.get(id)
+    db.session.delete(inventory_item)
     db.session.commit()
-    response = contact_schema.dump(contact)
+    response = inventory_schema.dump(inventory_item)
     return jsonify(response)
